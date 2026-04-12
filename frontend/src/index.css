@@ -1,0 +1,20 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --mwt-blue-dark: #0B1E3A;
+  --mwt-green-emerald: #00B286;
+  --mwt-turquoise: #1DE394;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background-color: #f8fafc;
+}
+
+.bg-mwt-dark {
+  background-color: #0B1E3A;
+}
