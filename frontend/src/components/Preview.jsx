@@ -181,8 +181,6 @@ const Preview = () => {
               </div>
             </div>
           ))}
-
-          </div>
         </form>
       </div>
 
