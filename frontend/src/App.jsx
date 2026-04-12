@@ -18,8 +18,11 @@ const App = () => {
   }, []);
 
   const ProtectedRoute = ({ children }) => {
-    // If we have a token, render children, else redirect to login
-    return token ? children : <Navigate to="/login" />;
+    const hasToken = !!localStorage.getItem('accessToken');
+    if (!hasToken) {
+      return <Navigate to="/login" replace />;
+    }
+    return children;
   };
 
   return (

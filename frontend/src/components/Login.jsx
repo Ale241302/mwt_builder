@@ -23,7 +23,7 @@ const Login = ({ onLogin }) => {
       localStorage.setItem('accessToken', response.data.access);
       localStorage.setItem('user', JSON.stringify(response.data.user));
       if (onLogin) onLogin();
-      navigate('/dashboard');
+      navigate('/dashboard', { replace: true });
     } catch (err) {
       setError(err.response?.data?.error || 'Error al iniciar sesión');
     }
