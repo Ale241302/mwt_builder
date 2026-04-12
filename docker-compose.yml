@@ -29,17 +29,12 @@ services:
     networks:
       - mwt_network
 
-  frontend:
-    build:
-      context: ./frontend
-      args:
-        - VITE_API_URL=https://builder.mwt.one
-    networks:
-      - mwt_network
-
   nginx:
     build:
-      context: ./nginx
+      context: .
+      dockerfile: ./nginx/Dockerfile
+      args:
+        - VITE_API_URL=https://builder.mwt.one
     ports:
       - "8080:80"
       - "8443:443"
@@ -49,7 +44,6 @@ services:
       - certbot_www:/var/www/certbot
     depends_on:
       - backend
-      - frontend
     networks:
       - mwt_network
 
