@@ -6,12 +6,12 @@ import Dashboard from './components/Dashboard';
 import Builder from './components/Builder';
 
 const App = () => {
-  const [token, setToken] = useState(localStorage.getItem('token'));
+  const [token, setToken] = useState(localStorage.getItem('accessToken'));
 
   // Listen for storage changes (for multiple tabs, but also useful for reactivity)
   useEffect(() => {
     const handleStorageChange = () => {
-      setToken(localStorage.getItem('token'));
+      setToken(localStorage.getItem('accessToken'));
     };
     window.addEventListener('storage', handleStorageChange);
     return () => window.removeEventListener('storage', handleStorageChange);
