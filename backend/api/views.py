@@ -1,10 +1,13 @@
 from rest_framework import viewsets, status, permissions
+from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
-from django.contrib.auth import authenticate
+from django.contrib.auth import authenticate, get_user_model
 from .models import Role, Artefacto
 from .serializers import RoleSerializer, ArtefactoSerializer, UserSerializer
+
+User = get_user_model()
 
 class LoginView(APIView):
     permission_classes = [permissions.AllowAny]
@@ -15,7 +18,6 @@ class LoginView(APIView):
 
         # Custom validation as requested
         if username == 'Admin' and password == 'MuitoWork2026?':
-            from django.contrib.auth.models import User
             user, created = User.objects.get_or_create(username='Admin')
             if created:
                 user.set_password(password)
@@ -37,6 +39,18 @@ class ArtefactoViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(created_by=self.request.user)
+
+    @action(detail=True, methods=['post'])
+    def duplicate(self, request, pk=None):
+        artefacto = self.get_object()
+        new_artefacto = Artefacto.objects.create(
+            title=f"{artefacto.title} (Copia)",
+            structure_json=artefacto.structure_json,
+            status='Draft',
+            created_by=request.user
+        )
+        serializer = self.get_serializer(new_artefacto)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 class RoleViewSet(viewsets.ModelViewSet):
     queryset = Role.objects.all()
