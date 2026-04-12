@@ -41,15 +41,15 @@ services:
     build:
       context: ./nginx
     ports:
-      - "80:80"
-      - "443:443"
+      - "8080:80"
+      - "8443:443"
     volumes:
       - static_volume:/app/static_collected
       - certbot_conf:/etc/letsencrypt
       - certbot_www:/var/www/certbot
-    # depends_on:
-    #   - backend
-    #   - frontend
+    depends_on:
+      - backend
+      - frontend
     networks:
       - mwt_network
 
