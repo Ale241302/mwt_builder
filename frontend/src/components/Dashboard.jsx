@@ -5,7 +5,7 @@ import {
   Zap, User as UserIcon, Copy, Edit, Trash2, Check, X,
   Sun, Moon
 } from 'lucide-react';
-import axios from 'axios';
+import api from '../api/config';
 import { useTheme } from '../context/ThemeContext';
 
 const Dashboard = () => {
@@ -34,10 +34,7 @@ const Dashboard = () => {
   const fetchArtefactos = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('token');
-      const response = await axios.get('http://localhost:8000/api/artefactos/', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const response = await api.get('/api/artefactos/');
       setArtefactos(response.data);
     } catch (err) {
       console.error('Error fetching artefactos', err);
@@ -50,17 +47,14 @@ const Dashboard = () => {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('token');
+    localStorage.removeItem('accessToken');
     localStorage.removeItem('user');
     navigate('/login');
   };
 
   const handleDuplicate = async (id) => {
     try {
-      const token = localStorage.getItem('token');
-      await axios.post(`http://localhost:8000/api/artefactos/${id}/duplicate/`, {}, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await api.post(`/api/artefactos/${id}/duplicate/`, {});
       fetchArtefactos();
       setMenuOpenId(null);
     } catch (err) {
@@ -72,10 +66,7 @@ const Dashboard = () => {
   const handleDelete = async () => {
     const id = confirmModal.id;
     try {
-      const token = localStorage.getItem('token');
-      await axios.delete(`http://localhost:8000/api/artefactos/${id}/`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await api.delete(`/api/artefactos/${id}/`);
       setArtefactos(artefactos.filter(a => a.id !== id));
       setConfirmModal({ show: false, id: null, title: '' });
     } catch (err) {
@@ -96,10 +87,7 @@ const Dashboard = () => {
   const handleToggleStatus = async (id, currentStatus) => {
     const newStatus = currentStatus === 'Published' ? 'Draft' : 'Published';
     try {
-      const token = localStorage.getItem('token');
-      await axios.patch(`http://localhost:8000/api/artefactos/${id}/`, { status: newStatus }, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await api.patch(`/api/artefactos/${id}/`, { status: newStatus });
       setArtefactos(artefactos.map(a => a.id === id ? { ...a, status: newStatus } : a));
     } catch (err) {
       if (err.response?.status === 401) return navigate('/login');

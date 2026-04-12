@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { User, Lock, Eye, EyeOff } from 'lucide-react';
-import axios from 'axios';
+import api from '../api/config';
 
 const Login = ({ onLogin }) => {
   const [username, setUsername] = useState('');
@@ -15,12 +15,12 @@ const Login = ({ onLogin }) => {
     setError('');
     
     try {
-      const response = await axios.post('http://localhost:8000/api/login/', {
+      const response = await api.post('/api/login/', {
         username,
         password,
       });
       
-      localStorage.setItem('token', response.data.access);
+      localStorage.setItem('accessToken', response.data.access);
       localStorage.setItem('user', JSON.stringify(response.data.user));
       if (onLogin) onLogin();
       navigate('/dashboard');

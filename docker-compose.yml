@@ -1,0 +1,73 @@
+services:
+  db:
+    image: postgres:16-alpine
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=${DB_NAME}
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+    networks:
+      - mwt_network
+
+  backend:
+    build:
+      context: ./backend
+    volumes:
+      - static_volume:/app/static_collected
+    environment:
+      - DB_NAME=${DB_NAME}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_HOST=db
+      - DB_PORT=5432
+      - SECRET_KEY=${SECRET_KEY}
+      - DEBUG=False
+      - ALLOWED_HOSTS=builder.mwt.one,backend
+    depends_on:
+      - db
+    networks:
+      - mwt_network
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        - VITE_API_URL=https://builder.mwt.one
+    networks:
+      - mwt_network
+
+  nginx:
+    image: nginx:stable-alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
+      - static_volume:/app/static_collected
+      - ./frontend/dist:/usr/share/nginx/html # Si construimos fuera, pero el Dockerfile frontend ya lo hace.
+      # Para SSL:
+      - ./certbot/conf:/etc/letsencrypt
+      - ./certbot/www:/var/www/certbot
+    depends_on:
+      - backend
+      - frontend
+    networks:
+      - mwt_network
+
+  certbot:
+    image: certbot/certbot
+    volumes:
+      - ./certbot/conf:/etc/letsencrypt
+      - ./certbot/www:/var/www/certbot
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
+    networks:
+      - mwt_network
+
+networks:
+  mwt_network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  static_volume:

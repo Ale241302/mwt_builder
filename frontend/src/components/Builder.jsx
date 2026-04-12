@@ -6,7 +6,7 @@ import {
   ChevronLeft, Sparkles, AlertCircle, Copy, ShieldCheck, ChevronRight, List, Pencil,
   Sun, Moon
 } from 'lucide-react';
-import axios from 'axios';
+import api from '../api/config';
 import { useTheme } from '../context/ThemeContext';
 
 const FIELD_TYPES = [
@@ -58,10 +58,7 @@ const Builder = () => {
 
   const fetchArtefacto = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await axios.get(`http://localhost:8000/api/artefactos/${id}/`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const response = await api.get(`/api/artefactos/${id}/`);
       setTitle(response.data.title);
       setSections(response.data.structure_json.sections || []);
     } catch (err) {
@@ -333,7 +330,6 @@ const Builder = () => {
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      const token = localStorage.getItem('token');
       const data = {
         title: title,
         structure_json: { sections },
@@ -341,13 +337,9 @@ const Builder = () => {
       };
       
       if (id) {
-        await axios.put(`http://localhost:8000/api/artefactos/${id}/`, data, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        await api.put(`/api/artefactos/${id}/`, data);
       } else {
-        await axios.post('http://localhost:8000/api/artefactos/', data, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        await api.post('/api/artefactos/', data);
       }
       navigate('/dashboard');
     } catch (err) {
