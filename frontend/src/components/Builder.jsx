@@ -349,6 +349,15 @@ const Builder = () => {
     }
   };
 
+  const handlePreview = () => {
+    const previewData = {
+      title,
+      sections
+    };
+    sessionStorage.setItem('preview_data', JSON.stringify(previewData));
+    window.open('/artefactos/preview/local', '_blank');
+  };
+
   return (
     <div className="min-h-screen bg-[#0B1E3A] flex flex-col h-screen overflow-hidden text-white selection:bg-mwt-turquoise/30">
       {/* Background Ambient Blurs */}
@@ -391,7 +400,10 @@ const Builder = () => {
           >
             {isLightMode ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
           </button>
-          <button className="px-6 py-2.5 bg-white/5 hover:bg-white/10 text-white/60 hover:text-white rounded-full font-bold transition-all flex items-center gap-2 text-xs border border-white/5 uppercase tracking-widest">
+          <button 
+            onClick={handlePreview}
+            className="px-6 py-2.5 bg-white/5 hover:bg-white/10 text-white/60 hover:text-white rounded-full font-bold transition-all flex items-center gap-2 text-xs border border-white/5 uppercase tracking-widest"
+          >
             <Eye className="h-4 w-4" /> Vista Previa
           </button>
           <button 

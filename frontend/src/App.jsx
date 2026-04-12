@@ -4,6 +4,7 @@ import { ThemeProvider } from './context/ThemeContext';
 import Login from './components/Login';
 import Dashboard from './components/Dashboard';
 import Builder from './components/Builder';
+import Preview from './components/Preview';
 
 const App = () => {
   const [token, setToken] = useState(localStorage.getItem('accessToken'));
@@ -29,7 +30,7 @@ const App = () => {
     <ThemeProvider>
       <Router>
         <Routes>
-          <Route path="/login" element={<Login onLogin={() => setToken(localStorage.getItem('token'))} />} />
+          <Route path="/login" element={<Login onLogin={() => setToken(localStorage.getItem('accessToken'))} />} />
           
           <Route path="/dashboard" element={
             <ProtectedRoute>
@@ -46,6 +47,12 @@ const App = () => {
           <Route path="/artefactos/editar/:id" element={
             <ProtectedRoute>
               <Builder />
+            </ProtectedRoute>
+          } />
+
+          <Route path="/artefactos/preview/:id" element={
+            <ProtectedRoute>
+              <Preview />
             </ProtectedRoute>
           } />
           
