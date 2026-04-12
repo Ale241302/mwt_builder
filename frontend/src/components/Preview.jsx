@@ -63,6 +63,77 @@ const Preview = () => {
     );
   }
 
+  const formatFileSize = (bytes) => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  };
+
+  const FilePreviewField = ({ field, commonClasses }) => {
+    const [selectedFile, setSelectedFile] = useState(null);
+    const [isDragging, setIsDragging] = useState(false);
+    const fileInputRef = React.useRef(null);
+
+    const handleFile = (file) => {
+      if (file) {
+        setSelectedFile(file);
+      }
+    };
+
+    const onDrop = (e) => {
+      e.preventDefault();
+      setIsDragging(false);
+      const file = e.dataTransfer.files[0];
+      handleFile(file);
+    };
+
+    return (
+      <div className="space-y-2">
+        <div 
+          onClick={() => fileInputRef.current?.click()}
+          onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
+          onDragLeave={() => setIsDragging(false)}
+          onDrop={onDrop}
+          className={`
+            relative group flex flex-col items-center justify-center p-6 border-2 border-dashed 
+            rounded-2xl transition-all cursor-pointer overflow-hidden
+            ${isDragging ? 'border-mwt-turquoise bg-mwt-turquoise/10 scale-[1.02]' : 'border-white/10 bg-white/5 hover:border-white/20 hover:bg-white/[0.07]'}
+            ${selectedFile ? 'border-mwt-turquoise/50 bg-mwt-turquoise/5' : ''}
+          `}
+        >
+          <input 
+            type="file" 
+            ref={fileInputRef}
+            className="hidden" 
+            onChange={(e) => handleFile(e.target.files[0])}
+          />
+          
+          <div className="relative z-10 flex flex-col items-center text-center gap-2">
+            <div className={`p-3 rounded-xl transition-all ${selectedFile ? 'bg-mwt-turquoise text-[#0B1E3A]' : 'bg-white/5 text-white/30 group-hover:text-mwt-turquoise group-hover:bg-mwt-turquoise/10'}`}>
+              <FileUp className="h-5 w-5" />
+            </div>
+            
+            {!selectedFile ? (
+              <div className="space-y-1">
+                <p className="text-xs font-bold text-white/60 group-hover:text-white transition-colors">Haga clic o arrastre un archivo</p>
+                <p className="text-[10px] text-white/20 uppercase tracking-widest font-medium">Suelte aquí para cargar</p>
+              </div>
+            ) : (
+              <div className="space-y-1">
+                <p className="text-xs font-bold text-mwt-turquoise truncate max-w-[200px]">{selectedFile.name}</p>
+                <p className="text-[10px] text-white/30 uppercase tracking-widest font-black">{formatFileSize(selectedFile.size)}</p>
+              </div>
+            )}
+          </div>
+
+          <div className={`absolute inset-0 bg-gradient-to-t from-mwt-turquoise/5 to-transparent transition-opacity duration-500 ${isDragging ? 'opacity-100' : 'opacity-0'}`}></div>
+        </div>
+      </div>
+    );
+  };
+
   const renderField = (field) => {
     const commonClasses = `w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl focus:ring-1 focus:ring-mwt-turquoise outline-none transition-all text-sm placeholder:text-white/10`;
     
@@ -106,6 +177,8 @@ const Preview = () => {
             <span className="text-sm text-white/60 group-hover:text-white transition-colors">{field.label}</span>
           </label>
         );
+      case 'file':
+        return <FilePreviewField field={field} commonClasses={commonClasses} />;
       default:
         return <input type={field.type === 'number' ? 'number' : field.type === 'date' ? 'date' : 'text'} className={commonClasses} placeholder="..." />;
     }
