@@ -49,9 +49,9 @@ services:
       # Para SSL:
       - ./certbot/conf:/etc/letsencrypt
       - ./certbot/www:/var/www/certbot
-    depends_on:
-      - backend
-      - frontend
+    # depends_on:
+    #   - backend
+    #   - frontend
     networks:
       - mwt_network
 
