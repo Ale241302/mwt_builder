@@ -72,10 +72,10 @@ const Preview = () => {
       case 'select':
         return (
           <div className="relative group">
-            <select className={`${commonClasses} appearance-none pr-10 hover:border-white/20 cursor-pointer`}>
-              <option value="" disabled selected>Seleccionar...</option>
+            <select className={`${commonClasses} appearance-none pr-10 hover:border-white/20 cursor-pointer text-white`}>
+              <option value="" disabled selected className="text-[#0B1E3A]">Seleccionar...</option>
               {field.options?.map((opt, i) => (
-                <option key={i} value={typeof opt === 'string' ? opt : opt.label}>
+                <option key={i} value={typeof opt === 'string' ? opt : opt.label} className="text-[#0B1E3A]">
                   {typeof opt === 'string' ? opt : opt.label}
                 </option>
               ))}
@@ -182,16 +182,6 @@ const Preview = () => {
             </div>
           ))}
 
-          {/* Submit Button Section */}
-          <div className="flex justify-center pt-8 animate-slide-up" style={{ animationDelay: `${data.sections.length * 100}ms` }}>
-            <button 
-              type="submit"
-              className="group relative bg-[#1DE394] hover:bg-[#00B286] text-[#0B1E3A] px-12 py-4 rounded-full font-bold shadow-2xl shadow-[#1DE394]/20 transition-all hover:scale-105 active:scale-95 flex items-center gap-3 uppercase tracking-[0.3em] text-xs"
-            >
-              <div className="absolute inset-0 bg-white/20 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-500 rounded-full"></div>
-              <Send className="h-4 w-4 relative z-10" /> 
-              <span className="relative z-10">Enviar Formulario</span>
-            </button>
           </div>
         </form>
       </div>
