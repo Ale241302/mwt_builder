@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import api from '../api/config';
 import { useTheme } from '../context/ThemeContext';
+import CodeFieldRenderer from './CodeFieldRenderer';
 
 const Preview = () => {
   const { isLightMode } = useTheme();
@@ -177,6 +178,8 @@ const Preview = () => {
             <span className="text-sm text-white/60 group-hover:text-white transition-colors">{field.label}</span>
           </label>
         );
+      case 'code':
+        return <CodeFieldRenderer field={field} />;
       case 'file':
         return <FilePreviewField field={field} commonClasses={commonClasses} />;
       default:

@@ -4,10 +4,11 @@ import {
   Type, Hash, AlignLeft, Calendar, CheckSquare, FileUp, 
   ChevronDown, Radio, Plus, Settings, Trash2, Eye, Save, Move,
   ChevronLeft, Sparkles, AlertCircle, Copy, ShieldCheck, ChevronRight, List, Pencil,
-  Sun, Moon
+  Sun, Moon, Code2
 } from 'lucide-react';
 import api from '../api/config';
 import { useTheme } from '../context/ThemeContext';
+import CodeEditorModal from './CodeEditorModal';
 
 const FIELD_TYPES = [
   { id: 'text', icon: Type, label: 'Texto' },
@@ -18,6 +19,7 @@ const FIELD_TYPES = [
   { id: 'file', icon: FileUp, label: 'Archivo' },
   { id: 'select', icon: ChevronDown, label: 'Selección' },
   { id: 'radio', icon: Radio, label: 'Botón Radio' },
+  { id: 'code', icon: Code2, label: 'Código' },
 ];
 
 const Builder = () => {
@@ -51,6 +53,10 @@ const Builder = () => {
   const [showOptionNameModal, setShowOptionNameModal] = useState(false);
   const [editingOption, setEditingOption] = useState(null); // { id, label }
   const [isAddingOption, setIsAddingOption] = useState(false);
+
+  // States for Code Editor
+  const [showCodeModal, setShowCodeModal] = useState(false);
+  const [codeTarget, setCodeTarget] = useState(null); // { secId, colId, field }
 
   useEffect(() => {
     if (id) fetchArtefacto();
@@ -562,6 +568,17 @@ const Builder = () => {
                                     <List className={`h-3.5 w-3.5 ${isLightMode ? 'text-slate-400' : 'text-white/20'} group-hover/opt:text-mwt-cyan`} />
                                   </button>
                                 )}
+                                {field.type === 'code' && (
+                                  <button 
+                                    onClick={() => {
+                                      setCodeTarget({ secId: section.id, colId: column.id, field });
+                                      setShowCodeModal(true);
+                                    }}
+                                    className={`p-1.5 ${isLightMode ? 'hover:bg-slate-100' : 'hover:bg-white/10'} rounded-lg transition-colors group/code`}
+                                  >
+                                    <Code2 className={`h-3.5 w-3.5 ${isLightMode ? 'text-slate-400' : 'text-white/20'} group-hover/code:text-emerald-400`} />
+                                  </button>
+                                )}
                                 <button 
                                   onClick={() => { setEditField({ secId: section.id, colId: column.id, field }); setShowEditFieldModal(true); }}
                                   className={`p-1.5 ${isLightMode ? 'hover:bg-slate-100' : 'hover:bg-white/10'} rounded-lg transition-colors group/icon`}
@@ -608,6 +625,37 @@ const Builder = () => {
       </div>
 
       {/* Modern Dialogs */}
+      {showCodeModal && codeTarget && (
+        <CodeEditorModal 
+          initialField={codeTarget.field}
+          onClose={() => {
+            setShowCodeModal(false);
+            setCodeTarget(null);
+          }}
+          onSave={(updatedField) => {
+            setSections(sections.map(s => {
+              if (s.id === codeTarget.secId) {
+                return {
+                  ...s,
+                  columns: s.columns.map(c => {
+                    if (c.id === codeTarget.colId) {
+                      return {
+                        ...c,
+                        fields: c.fields.map(f => f.id === codeTarget.field.id ? updatedField : f)
+                      };
+                    }
+                    return c;
+                  })
+                };
+              }
+              return s;
+            }));
+            setShowCodeModal(false);
+            setCodeTarget(null);
+          }}
+        />
+      )}
+
       {showSectionModal && (
         <div className="fixed inset-0 bg-[#0B1E3A]/90 backdrop-blur-xl flex items-center justify-center z-50 p-6 animate-scale-in">
           <div className="bg-white/5 border border-white/10 p-10 rounded-[2.5rem] shadow-2xl max-w-sm w-full animate-scale-in">

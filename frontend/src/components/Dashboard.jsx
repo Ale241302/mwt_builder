@@ -101,7 +101,7 @@ const Dashboard = () => {
   };
 
   return (
-    <div className={`min-h-screen ${isLightMode ? 'bg-[#F8FAFC]' : 'bg-[#0B1E3A]'} ${isLightMode ? 'text-[#0B1E3A]' : 'text-white'} selection:bg-mwt-turquoise/30 relative overflow-hidden transition-colors duration-500`}>
+    <div className={`min-h-screen ${isLightMode ? 'bg-[#F8FAFC]' : 'bg-[#0B1E3A]'} ${isLightMode ? 'text-[#0B1E3A]' : 'text-white'} selection:bg-mwt-turquoise/30 relative overflow-x-hidden pb-32 transition-colors duration-500`}>
       {/* Background Ambient Effects */}
       <div className="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] bg-[#481EE3]/10 rounded-full blur-[150px] pointer-events-none"></div>
       <div className="absolute bottom-[-20%] right-[-10%] w-[60%] h-[60%] bg-[#00B286]/10 rounded-full blur-[150px] pointer-events-none"></div>
@@ -264,17 +264,30 @@ const Dashboard = () => {
                         </span>
                       </div>
                     </td>
-                    <td className="px-8 py-5 text-right">
-                      <button 
-                        onClick={(e) => handleOpenMenu(e, art.id)}
-                        className={`p-2 rounded-lg transition-all ${
-                          menuOpenId === art.id 
-                            ? 'bg-mwt-turquoise/20 text-mwt-turquoise' 
-                            : (isLightMode ? 'text-slate-400 hover:text-mwt-turquoise hover:bg-slate-100' : 'text-white/20 hover:text-mwt-turquoise hover:bg-white/5 border border-transparent hover:border-white/10')
-                        }`}
-                      >
-                        <MoreVertical className="h-5 w-5" />
-                      </button>
+                    <td className="px-8 py-5">
+                      <div className="flex items-center justify-end gap-2">
+                        <button 
+                          onClick={() => handleDuplicate(art.id)}
+                          className={`p-2 rounded-lg transition-all ${isLightMode ? 'text-slate-400 hover:text-mwt-turquoise hover:bg-slate-100' : 'text-white/40 hover:text-mwt-turquoise hover:bg-white/10'}`}
+                          title="Duplicar"
+                        >
+                          <Copy className="h-4 w-4" />
+                        </button>
+                        <button 
+                          onClick={() => navigate(`/artefactos/editar/${art.id}`)}
+                          className={`p-2 rounded-lg transition-all ${isLightMode ? 'text-slate-400 hover:text-mwt-royal-blue hover:bg-slate-100' : 'text-white/40 hover:text-mwt-royal-blue hover:bg-white/10'}`}
+                          title="Editar"
+                        >
+                          <Edit className="h-4 w-4" />
+                        </button>
+                        <button 
+                          onClick={() => confirmDelete(art.id, art.title)}
+                          className={`p-2 rounded-lg transition-all ${isLightMode ? 'text-slate-400 hover:text-red-500 hover:bg-red-50' : 'text-white/40 hover:text-red-400 hover:bg-red-500/10'}`}
+                          title="Eliminar"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -302,34 +315,6 @@ const Dashboard = () => {
         </div>
       </main>
 
-      {/* Floating Menu - Fixed Position (Safe from Clipping) */}
-      {menuOpenId && (
-        <div 
-          ref={menuRef}
-          className={`fixed glass-card ${isLightMode ? 'bg-white border-slate-200 shadow-xl' : 'border-white/10 shadow-2xl'} border rounded-2xl z-[9000] p-2 animate-scale-in w-48`}
-          style={{ top: menuPosition.top, left: menuPosition.left }}
-        >
-          <button 
-            onClick={() => handleDuplicate(menuOpenId)}
-            className={`w-full flex items-center gap-3 px-4 py-3 text-[10px] font-bold ${isLightMode ? 'text-slate-600' : 'text-white/60'} hover:text-mwt-turquoise ${isLightMode ? 'hover:bg-slate-50' : 'hover:bg-mwt-turquoise/10'} rounded-xl transition-all`}
-          >
-            <Copy className="h-3.5 w-3.5" /> DUPLICAR
-          </button>
-          <button 
-            onClick={() => { navigate(`/artefactos/editar/${menuOpenId}`); setMenuOpenId(null); }}
-            className={`w-full flex items-center gap-3 px-4 py-3 text-[10px] font-bold ${isLightMode ? 'text-slate-600' : 'text-white/60'} hover:text-mwt-royal-blue ${isLightMode ? 'hover:bg-slate-50' : 'hover:bg-mwt-royal-blue/10'} rounded-xl transition-all`}
-          >
-            <Edit className="h-3.5 w-3.5" /> EDITAR
-          </button>
-          <div className={`h-px ${isLightMode ? 'bg-slate-100' : 'bg-white/5'} my-1 mx-2`}></div>
-          <button 
-            onClick={() => confirmDelete(menuOpenId, artefactos.find(a => a.id === menuOpenId)?.title)}
-            className={`w-full flex items-center gap-3 px-4 py-3 text-[10px] font-bold ${isLightMode ? 'text-red-500/70' : 'text-red-400/60'} hover:text-red-400 ${isLightMode ? 'hover:bg-red-50' : 'hover:bg-red-400/10'} rounded-xl transition-all`}
-          >
-            <Trash2 className="h-3.5 w-3.5" /> ELIMINAR
-          </button>
-        </div>
-      )}
 
       {/* Custom Confirmation Modal */}
       {confirmModal.show && (
