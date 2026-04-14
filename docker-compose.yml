@@ -10,7 +10,7 @@ services:
     networks:
       - mwt_network
 
-  backend:
+  django:
     build:
       context: ./backend
     volumes:
@@ -23,9 +23,17 @@ services:
       - DB_PORT=5432
       - SECRET_KEY=${SECRET_KEY}
       - DEBUG=False
-      - ALLOWED_HOSTS=builder.mwt.one,backend
+      - ALLOWED_HOSTS=builder.mwt.one,django
     depends_on:
       - db
+    networks:
+      - mwt_network
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        - VITE_API_URL=https://builder.mwt.one
     networks:
       - mwt_network
 
@@ -43,7 +51,8 @@ services:
       - certbot_conf:/etc/letsencrypt
       - certbot_www:/var/www/certbot
     depends_on:
-      - backend
+      - django
+      - frontend
     networks:
       - mwt_network
 
