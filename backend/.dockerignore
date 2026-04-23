@@ -11,4 +11,3 @@ venv
 static_collected
 media
 db.sqlite3
-data.json
