@@ -1,20 +1,23 @@
 services:
   db:
     image: postgres:16-alpine
+    container_name: mwt-builder-postgres
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - mwt_builder_postgres_data:/var/lib/postgresql/data
     environment:
       - POSTGRES_DB=${DB_NAME}
       - POSTGRES_USER=${DB_USER}
       - POSTGRES_PASSWORD=${DB_PASSWORD}
     networks:
-      - mwt_network
+      - mwt_builder_network
 
   django:
     build:
       context: ./backend
+    image: mwt-builder/django:latest
+    container_name: mwt-builder-django
     volumes:
-      - static_volume:/app/static_collected
+      - mwt_builder_static:/app/static_collected
     environment:
       - DB_NAME=${DB_NAME}
       - DB_USER=${DB_USER}
@@ -27,50 +30,51 @@ services:
     depends_on:
       - db
     networks:
-      - mwt_network
+      - mwt_builder_network
 
   frontend:
     build:
       context: ./frontend
-      args:
-        - VITE_API_URL=https://builder.mwt.one
+    image: mwt-builder/frontend:latest
+    container_name: mwt-builder-frontend
     networks:
-      - mwt_network
+      - mwt_builder_network
 
   nginx:
     build:
       context: .
       dockerfile: ./nginx/Dockerfile
-      args:
-        - VITE_API_URL=https://builder.mwt.one
+    image: mwt-builder/nginx:latest
+    container_name: mwt-builder-nginx
     ports:
       - "8080:80"
       - "8443:443"
     volumes:
-      - static_volume:/app/static_collected
-      - certbot_conf:/etc/letsencrypt
-      - certbot_www:/var/www/certbot
+      - mwt_builder_static:/app/static_collected
+      - mwt_builder_certbot_conf:/etc/letsencrypt
+      - mwt_builder_certbot_www:/var/www/certbot
     depends_on:
       - django
       - frontend
     networks:
-      - mwt_network
+      - mwt_builder_network
 
   certbot:
     image: certbot/certbot
+    container_name: mwt-builder-certbot
     volumes:
-      - certbot_conf:/etc/letsencrypt
-      - certbot_www:/var/www/certbot
+      - mwt_builder_certbot_conf:/etc/letsencrypt
+      - mwt_builder_certbot_www:/var/www/certbot
     entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
     networks:
-      - mwt_network
+      - mwt_builder_network
 
 networks:
-  mwt_network:
+  mwt_builder_network:
     driver: bridge
 
 volumes:
-  postgres_data:
-  static_volume:
-  certbot_conf:
-  certbot_www:
+  mwt_builder_postgres_data:
+  mwt_builder_static:
+  mwt_builder_certbot_conf:
+  mwt_builder_certbot_www:
