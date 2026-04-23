@@ -26,7 +26,7 @@ services:
       - DB_PORT=5432
       - SECRET_KEY=${SECRET_KEY}
       - DEBUG=False
-      - ALLOWED_HOSTS=builder.mwt.one,django
+      - ALLOWED_HOSTS=builder.mwt.one,django,187.77.218.102
     depends_on:
       - db
     networks:
