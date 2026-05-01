@@ -5,6 +5,23 @@ export default function CodeFieldRenderer({ field }) {
     const code = field.code || '';
     
     if (field.language === 'python') {
+      // Envolvemos el código del usuario en `async def __mwt_main__()` para que
+      // `return` y `await` funcionen a "nivel script" sin SyntaxError.
+      // Si la función retorna algo distinto de None, lo imprimimos como repr.
+      const userCode = code || '';
+      const indented = userCode.split('\n').map(l => '    ' + l).join('\n');
+      const safeBody = indented.trim() ? indented : '    pass';
+      const wrappedPython =
+        'async def __mwt_main__():\n' +
+        safeBody + '\n' +
+        '\n' +
+        '__mwt_result = await __mwt_main__()\n' +
+        'if __mwt_result is not None:\n' +
+        '    print(repr(__mwt_result))\n';
+      // JSON.stringify garantiza que cualquier carácter (backtick, comillas,
+      // newlines, ${...}) quede escapado correctamente para el motor JS.
+      const pyLiteral = JSON.stringify(wrappedPython);
+
       return `
         <html>
         <head>
@@ -23,15 +40,15 @@ export default function CodeFieldRenderer({ field }) {
               try {
                 const pyodide = await loadPyodide();
                 document.querySelector('.sys-msg').style.display = 'none';
-                
+
                 // Redirect stdout
                 pyodide.setStdout({ batched: (s) => document.getElementById('out').textContent += s + '\\n' });
                 // Redirect stderr
                 pyodide.setStderr({ batched: (s) => document.getElementById('out').textContent += s + '\\n' });
-                
-                await pyodide.runPythonAsync(\`${code}\`);
+
+                await pyodide.runPythonAsync(${pyLiteral});
               } catch (err) {
-                document.getElementById('out').textContent += '\\n[Error]: ' + err.message;
+                document.getElementById('out').textContent += '\\n[Error]: ' + (err && err.message ? err.message : err);
               }
             }
             run();
