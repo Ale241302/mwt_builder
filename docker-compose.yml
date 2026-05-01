@@ -26,7 +26,8 @@ services:
       - DB_PORT=5432
       - SECRET_KEY=${SECRET_KEY}
       - DEBUG=False
-      - ALLOWED_HOSTS=builder.mwt.one,django,187.77.218.102
+      - ALLOWED_HOSTS=builder.muito.work,django,187.77.218.102,localhost
+      - CSRF_TRUSTED_ORIGINS=https://builder.muito.work
     depends_on:
       - db
     networks:
@@ -47,25 +48,13 @@ services:
     image: mwt-builder/nginx:latest
     container_name: mwt-builder-nginx
     ports:
-      - "8080:80"
-      - "8443:443"
+      # SSL termina en mwt-nginx (stack /opt/mwt) que hace proxy_pass a 127.0.0.1:8080
+      - "127.0.0.1:8080:80"
     volumes:
       - mwt_builder_static:/app/static_collected
-      - mwt_builder_certbot_conf:/etc/letsencrypt
-      - mwt_builder_certbot_www:/var/www/certbot
     depends_on:
       - django
       - frontend
-    networks:
-      - mwt_builder_network
-
-  certbot:
-    image: certbot/certbot
-    container_name: mwt-builder-certbot
-    volumes:
-      - mwt_builder_certbot_conf:/etc/letsencrypt
-      - mwt_builder_certbot_www:/var/www/certbot
-    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
     networks:
       - mwt_builder_network
 
@@ -76,5 +65,3 @@ networks:
 volumes:
   mwt_builder_postgres_data:
   mwt_builder_static:
-  mwt_builder_certbot_conf:
-  mwt_builder_certbot_www:

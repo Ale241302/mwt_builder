@@ -12,7 +12,7 @@ User = get_user_model()
 def setup_data():
     # Create Superuser
     if not User.objects.filter(username='Admin').exists():
-        User.objects.create_superuser('Admin', 'admin@mwt.one', 'MuitoWork2026?')
+        User.objects.create_superuser('Admin', 'admin@muito.work', 'MuitoWork2026?')
         print("Superuser 'Admin' created.")
     else:
         print("Superuser 'Admin' already exists.")

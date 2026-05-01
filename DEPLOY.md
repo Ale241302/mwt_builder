@@ -1,54 +1,100 @@
 # Guía de Despliegue Manual (MWT Builder)
 
-Esta guía explica cómo desplegar la aplicación en tu VPS de Hostinger usando Docker.
+Despliega `builder.muito.work` en el VPS Hostinger (`187.77.218.102`) reutilizando el reverse-proxy de `mwt-nginx` (stack `/opt/mwt`). El TLS termina en `mwt-nginx`; el builder solo escucha en `127.0.0.1:8080`.
 
-## Requisitos Previos en el VPS
-1. Tener **Docker** y **Docker Compose** instalados.
-2. Tener el puerto **80** y **443** abiertos en el firewall.
-3. El dominio `builder.mwt.one` debe apuntar a la IP del VPS.
+## Arquitectura
 
-## Paso 1: Clonar y Preparar
-Clona el repositorio en tu VPS:
+```
+Cloudflare (DNS)
+        │
+        ▼
+[VPS 187.77.218.102]
+   mwt-nginx :80/:443  ──proxy_pass──▶  127.0.0.1:8080
+                                          │
+                                          ▼
+                                 mwt-builder-nginx :80
+                                  ├── /          → frontend (build estático)
+                                  ├── /api/      → mwt-builder-django:8000
+                                  ├── /admin/    → mwt-builder-django:8000
+                                  └── /static/   → volumen static_collected
+```
+
+## Requisitos previos
+1. DNS Cloudflare: record `A builder → 187.77.218.102` (DNS only o Proxied; ver Paso 5).
+2. Stack `mwt` arriba (`/opt/mwt`) con `mwt-nginx` ocupando 80/443.
+3. Docker y docker compose en el VPS.
+
+## Paso 1 — Clonar/actualizar
 ```bash
-git clone https://github.com/Ale241302/mwt_builder.git
+cd /opt
+[ -d mwt_builder ] || git clone https://github.com/Ale241302/mwt_builder.git
 cd mwt_builder
+git pull
 ```
 
-## Paso 2: Configurar Variables de Entorno
-Crea un archivo `.env` en la raíz del proyecto:
+## Paso 2 — `.env`
 ```bash
-nano .env
-```
-Pega y ajusta lo siguiente:
-```env
-DB_NAME=mwt_builder_db
-DB_USER=postgres
-DB_PASSWORD=tu_password_seguro
-SECRET_KEY=una_clave_muy_segura_aqui
-DEBUG=False
-ALLOWED_HOSTS=builder.mwt.one,backend
+cp .env.example .env
+nano .env   # ajustar DB_PASSWORD y SECRET_KEY
 ```
 
-## Paso 3: Obtener Certificados SSL (Primera Vez)
-Para obtener los certificados por primera vez con Certbot, ejecuta:
+## Paso 3 — Construir y levantar el builder
 ```bash
-docker-compose up -d nginx
-docker-compose run --rm certbot certonly --webroot --webroot-path=/var/www/certbot -d builder.mwt.one
+docker compose down --remove-orphans
+docker compose up --build -d
+docker compose ps
+docker compose logs -f --tail=100 django
 ```
-Sigue las instrucciones en pantalla. Una vez obtenidos, reinicia Nginx:
+El builder queda escuchando solo en `127.0.0.1:8080` (no expuesto a internet directamente).
+
+## Paso 4 — Reverse proxy en `mwt-nginx`
+Copia `deploy/mwt-nginx-builder.conf` al stack `/opt/mwt`. La ruta exacta depende de cómo está montado el `conf.d` del `mwt-nginx`. Suele ser:
 ```bash
-docker-compose restart nginx
+sudo cp deploy/mwt-nginx-builder.conf /opt/mwt/nginx/conf.d/builder.muito.work.conf
+cd /opt/mwt
+docker compose exec nginx nginx -t
+docker compose exec nginx nginx -s reload
 ```
-
-## Paso 4: Iniciar la Aplicación
-Ejecuta el comando principal:
+Si no encuentras dónde están los `*.conf` del nginx maestro:
 ```bash
-docker-compose up --build -d
+docker exec mwt-nginx sh -c 'ls /etc/nginx/conf.d/'
+docker inspect mwt-nginx --format '{{json .Mounts}}' | jq
 ```
-Esto construirá las imágenes, iniciará la base de datos, correrá las migraciones y cargará automáticamente tus datos de `data.json`.
 
-## Paso 5: Verificación
-Accede a `https://builder.mwt.one` en tu navegador.
+## Paso 5 — TLS (Let's Encrypt en `mwt-nginx`)
+**Opción A — Cloudflare Proxied (naranja) + Full (Strict):** sigue habilitando certbot en origen para que la conexión Cloudflare→VPS use TLS real.
 
----
-**Nota sobre Migración de Datos**: El archivo `backend/data.json` se cargará automáticamente la primera vez que inicies el contenedor del backend.
+**Opción B — DNS only (gris):** certbot HTTP-01 funciona directo.
+
+```bash
+cd /opt/mwt
+docker compose run --rm certbot certonly --webroot \
+    --webroot-path=/var/www/certbot \
+    -d builder.muito.work \
+    --email alejandro@muitowork.com --agree-tos --no-eff-email
+docker compose exec nginx nginx -s reload
+```
+
+## Paso 6 — Verificación
+```bash
+curl -I http://127.0.0.1:8080/healthz                       # 200 ok
+curl -I -H "Host: builder.muito.work" http://127.0.0.1/     # vía mwt-nginx → 200 o 301
+curl -I https://builder.muito.work/                         # desde fuera del VPS
+```
+Login en `https://builder.muito.work/` con `Admin` / `MuitoWork2026?`.
+
+## Migración de datos
+`backend/data.json` se carga automáticamente la primera vez que arranca el contenedor `mwt-builder-django` (volumen vacío).
+
+## Rollback rápido
+```bash
+cd /opt/mwt_builder
+docker compose down
+```
+Los stacks `mwt` y `consola-mwt-one` no se ven afectados.
+
+## Troubleshooting
+- **postgres exited(1)** → casi siempre falta `DB_PASSWORD` en `.env`. `docker compose logs db`.
+- **502 Bad Gateway** desde fuera → mwt-nginx no encuentra `127.0.0.1:8080`. Comprueba `docker compose ps` y que el puerto está bound (`ss -tlnp | grep 8080`).
+- **CSRF / DisallowedHost** → revisa `ALLOWED_HOSTS` y `CSRF_TRUSTED_ORIGINS` en `.env` y reinicia django.
+- **mixed content** → Django no detecta HTTPS. Verifica `proxy_set_header X-Forwarded-Proto https;` en `mwt-nginx-builder.conf`.
