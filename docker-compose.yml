@@ -51,8 +51,10 @@ services:
     image: mwt-builder/nginx:latest
     container_name: mwt-builder-nginx
     ports:
-      # SSL termina en mwt-nginx (stack /opt/mwt) que hace proxy_pass a 127.0.0.1:8080
-      - "127.0.0.1:8080:80"
+      # Bind a la IP del bridge docker default para que mwt-nginx (otro stack)
+      # pueda llegar vía host.docker.internal:8080. Sigue NO siendo accesible
+      # desde internet (172.17.0.1 es IP privada del bridge).
+      - "172.17.0.1:8080:80"
     volumes:
       - mwt_builder_static:/app/static_collected
     depends_on:
