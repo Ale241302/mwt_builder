@@ -45,6 +45,9 @@ services:
     build:
       context: .
       dockerfile: ./nginx/Dockerfile
+      args:
+        # El Dockerfile compila el frontend con esta URL hardcoded en el bundle.
+        VITE_API_URL: ${VITE_API_URL}
     image: mwt-builder/nginx:latest
     container_name: mwt-builder-nginx
     ports:
